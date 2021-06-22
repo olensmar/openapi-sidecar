@@ -1,8 +1,8 @@
 # openapi-sidecar
 
 A simple HTTP proxy/sidecar for validating incoming requests against an OpenAPI definition and returning nice errors if
-they aren't compliant with any defined operation or its request parameters/schema. Valid requests will be forwarded to
-the target service and the response will be returned accordingly.
+requests don't match any defined operation or its defined request parameters/schema. Valid requests will be forwarded to
+the target service and its response will be returned accordingly.
 
 Useful if you
 
