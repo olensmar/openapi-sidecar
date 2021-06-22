@@ -173,10 +173,10 @@ port 8000 instead (which will then proxy back to the "real" 8080).
 
 This project contains two docker images:
 
-- the root [Dockerfile](Dockerfile) builds the actual proxy for [main.go](main.go)
+- the root [Dockerfile](Dockerfile) builds the actual proxy from [main.go](main.go)
 - the init [Dockerfile](init/Dockerfile) builds the initContainer for portrewriting.
 
 ## Kudos
 
 To Venil Noronha's https://venilnoronha.io/hand-crafting-a-sidecar-proxy-and-demystifying-istio article, which provided
-much of the boilerplate and insight needed for this project
+much of the boilerplate and insight needed for this.
