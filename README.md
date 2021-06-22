@@ -1,12 +1,13 @@
 # openapi-sidecar
 
-A simple HTTP proxy for validating incoming requests against an OpenAPI definition and returning nice errors if they
-aren't compliant with any defined operation or its parameters/schema.
+A simple HTTP proxy/sidecar for validating incoming requests against an OpenAPI definition and returning nice errors if
+they aren't compliant with any defined operation or its request parameters/schema. Valid requests will be forwarded to
+the target service and the response will be returned accordingly.
 
 Useful if you
 
 * don't want to write all that logic yourself
-* want to guard your service from unwanted illegal requests
+* want to guard your service from unwanted requests
 
 Supports both OpenAPI 2.0 and 3.X definitions.
 
@@ -35,6 +36,8 @@ Try sending a valid request to the service with curl:
 curl -X GET "http://localhost:8001/api/v3/pet/findByStatus?status=sold" -H  "accept: application/json"
 [{"id":5,"category":{"id":1,"name":"Dogs"},"name":"Dog 2","photoUrls":["url1","url2"],"tags":[{"id":1,"name":"tag2"},{"id":2,"name":"tag3"}],"status":"sold"}]
 ```
+
+This request gets forwarded to the petstore service and its response is returned accordingly.
 
 Now try sending an invalid request with an incorrect status value:
 
@@ -67,9 +70,19 @@ Value:
  | 
 ```
 
+The error message above was created by the openapi-sidecar and returned to the client - no request was forwarded to the
+petstore service.
+
+## Usage modes
+
+You can use the openapi-sidecar in two ways:
+
+* as a regular proxy with the client calling the proxy directly
+* by rewriting the ip-table of your pod to reroute traffic internally to the sidecar
+
 ### Regular Proxy
 
-To use the openapi-sidecar, add it to your pod/deployment as follows:
+To use the openapi-sidecar as a proxy, simply add it to your pod/deployment as follows:
 
 ```yaml
       containers:
@@ -90,8 +103,7 @@ To use the openapi-sidecar, add it to your pod/deployment as follows:
 If you specify a path (and not a complete URL) for the OpenAPI definition it will be retrieved from the target service
 at the specified SERVICE_PORT.
 
-The following example taken from the included [deployment.yaml](k8s/deployment.yaml) is for the petstore3 service (which
-incidentally works with all the default values):
+The following example taken from the included [deployment.yaml](k8s/deployment.yaml) is for the petstore3 service:
 
 ```yaml
       containers:
@@ -103,6 +115,13 @@ incidentally works with all the default values):
           image: kubeshop/openapi-sidecar:latest
           ports:
             - containerPort: 8000
+          env:
+            - name: PROXY_PORT
+              value: "8000"
+            - name: SERVICE_PORT
+              value: "8080"
+            - name: OPENAPI_PATH
+              value: "/api/v3/openapi.json"
 ```
 
 In this case clients would use port 8000 instead of 8080 to get request-validation functionality.
@@ -110,7 +129,8 @@ In this case clients would use port 8000 instead of 8080 to get request-validati
 ### With port-rewriting
 
 If you for some reason can't (or don't want to) change the port of the target service (or the service client) you can
-use the included openapi-sidecar-init docker image to dynamically rewrite the ports of the pod.
+use the included openapi-sidecar-init docker image to dynamically rewrite the ports of the pod
+(see the [init.sh](init/init.sh) script to see how this is done).
 
 Adding this to the example above:
 
@@ -137,10 +157,24 @@ Adding this to the example above:
           image: olensmar/openapi-sidecar:latest
           ports:
             - containerPort: 8000
+          env:
+            - name: PROXY_PORT
+              value: "8000"
+            - name: SERVICE_PORT
+              value: "8080"
+            - name: OPENAPI_PATH
+              value: "/api/v3/openapi.json"
 ```
 
 The init-container will rewrite the iptable of the pod as to redirect traffic going to the service on port 8080 to go to
 port 8000 instead (which will then proxy back to the "real" 8080).
+
+## Building
+
+This project contains two docker images:
+
+- the root [Dockerfile](Dockerfile) builds the actual proxy for [main.go](main.go)
+- the init [Dockerfile](init/Dockerfile) builds the initContainer for portrewriting.
 
 ## Kudos
 
