@@ -121,22 +121,17 @@ func (p *Proxy) init(config Config) error {
 	ctx := context.Background()
 	loader := &openapi3.Loader{Context: ctx}
 	urlpath := config.OpenapiPath
-	var err error
-	var doc *openapi3.T
 
-	if strings.HasPrefix(strings.ToLower(urlpath), "file:") {
-		doc, err = loader.LoadFromFile(urlpath[5:len(urlpath)])
-	} else {
-		if !strings.HasPrefix(strings.ToLower(urlpath), "http://") && !strings.HasPrefix(strings.ToLower(urlpath), "https://") {
-			urlpath = fmt.Sprintf("http://127.0.0.1:%d%s", config.ServicePort, config.OpenapiPath)
-		}
-
-		openapiUrl, err := url.Parse(urlpath)
-		if err == nil {
-			doc, err = loader.LoadFromURI(openapiUrl)
-		}
+	if !strings.HasPrefix(strings.ToLower(urlpath), "http://") && !strings.HasPrefix(strings.ToLower(urlpath), "https://") {
+		urlpath = fmt.Sprintf("http://127.0.0.1:%d%s", config.ServicePort, config.OpenapiPath)
 	}
 
+	openapiUrl, err := url.Parse(urlpath)
+	if err != nil {
+		return err
+	}
+
+	doc, err := loader.LoadFromURI(openapiUrl)
 	if err != nil {
 		return err
 	}

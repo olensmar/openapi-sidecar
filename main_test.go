@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -25,10 +26,14 @@ func TestValidation(t *testing.T) {
 	}
 
 	setup := func() *fixture {
-
 		s := httptest.NewServer(
-			http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-				w.Write([]byte("hello world"))
+			http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+				if request.URL.Path == "/petstore.yaml" {
+					file, _ := ioutil.ReadFile("resources/petstore.yaml")
+					w.Write(file)
+				} else {
+					w.Write([]byte("hello world"))
+				}
 			}),
 		)
 
@@ -38,7 +43,7 @@ func TestValidation(t *testing.T) {
 		config := Config{
 			ProxyPort:   8080,
 			ServicePort: port,
-			OpenapiPath: "file:resources/petstore.yaml",
+			OpenapiPath: "/petstore.yaml",
 		}
 
 		proxy := Proxy{}
