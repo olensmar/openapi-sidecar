@@ -171,10 +171,12 @@ port 8000 instead (which will then proxy back to the "real" 8080).
 
 ## Building
 
-This project contains two docker images:
+This project contains builds docker images:
 
-- the root [Dockerfile](Dockerfile) builds the actual proxy from [main.go](main.go)
-- the init [Dockerfile](init/Dockerfile) builds the initContainer for portrewriting.
+- the root [Dockerfile](Dockerfile) builds the actual proxy from [main.go](main.go) - see latest
+  on [DockerHub](https://hub.docker.com/repository/docker/kubeshop/openapi-sidecar)
+- the init [Dockerfile](init/Dockerfile) builds the initContainer for portrewriting - see latest
+  on [DockerHub](https://hub.docker.com/repository/docker/kubeshop/openapi-sidecar-init)
 
 ## Kudos
 

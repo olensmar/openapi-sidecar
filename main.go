@@ -88,7 +88,7 @@ func main() {
 
 func (p *Proxy) forwardRequest(req *http.Request) (*http.Response, error) {
 	// Prepare the destination endpoint to forward the request to.
-	proxyUrl := fmt.Sprintf("http://127.0.0.1:%d%s", p.config.ServicePort, req.RequestURI)
+	proxyUrl := fmt.Sprintf("http://127.0.0.1:%d%s", p.config.ServicePort, req.URL.Path)
 
 	// Create an HTTP client and a proxy request based on the original request.
 	httpClient := http.Client{}
@@ -120,18 +120,23 @@ func (p *Proxy) writeResponse(w http.ResponseWriter, res *http.Response) {
 func (p *Proxy) init(config Config) error {
 	ctx := context.Background()
 	loader := &openapi3.Loader{Context: ctx}
-
 	urlpath := config.OpenapiPath
-	if !strings.HasPrefix(strings.ToLower(urlpath), "http://") && !strings.HasPrefix(strings.ToLower(urlpath), "https://") {
-		urlpath = fmt.Sprintf("http://127.0.0.1:%d%s", config.ServicePort, config.OpenapiPath)
+	var err error
+	var doc *openapi3.T
+
+	if strings.HasPrefix(strings.ToLower(urlpath), "file:") {
+		doc, err = loader.LoadFromFile(urlpath[5:len(urlpath)])
+	} else {
+		if !strings.HasPrefix(strings.ToLower(urlpath), "http://") && !strings.HasPrefix(strings.ToLower(urlpath), "https://") {
+			urlpath = fmt.Sprintf("http://127.0.0.1:%d%s", config.ServicePort, config.OpenapiPath)
+		}
+
+		openapiUrl, err := url.Parse(urlpath)
+		if err == nil {
+			doc, err = loader.LoadFromURI(openapiUrl)
+		}
 	}
 
-	openapiUrl, err := url.Parse(urlpath)
-	if err != nil {
-		return err
-	}
-
-	doc, err := loader.LoadFromURI(openapiUrl)
 	if err != nil {
 		return err
 	}
