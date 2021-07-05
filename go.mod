@@ -1,4 +1,4 @@
-module openapi-sidecar
+module github.com/kubeshop/openapi-sidecar
 
 go 1.16
 

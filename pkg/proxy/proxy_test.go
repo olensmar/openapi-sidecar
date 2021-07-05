@@ -1,4 +1,4 @@
-package main
+package proxy
 
 import (
 	"encoding/json"
@@ -48,7 +48,7 @@ func TestValidation(t *testing.T) {
 		}
 
 		proxy := Proxy{}
-		proxy.init(config)
+		proxy.Init(config)
 
 		return &fixture{
 			config: config,
