@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 
 	"gotest.tools/assert"
@@ -83,5 +84,22 @@ func TestValidation(t *testing.T) {
 		assert.NilError(t, err)
 		assert.Equal(t, errorMessage.Code, "400")
 		assert.Equal(t, errorMessage.Message, "no matching operation was found")
+	})
+
+	t.Run("invalid enum value", func(t *testing.T) {
+		f := setup()
+
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest("GET", f.server.URL+"/pet/findByStatus?status=testasd", nil)
+
+		f.proxy.ServeHTTP(recorder, request)
+
+		assert.Equal(t, 400, recorder.Code)
+		var errorMessage ErrorMessage
+		err := json.Unmarshal(recorder.Body.Bytes(), &errorMessage)
+
+		assert.NilError(t, err)
+		assert.Equal(t, errorMessage.Code, "400")
+		assert.Assert(t, strings.Contains(errorMessage.Message, "parameter \"status\" in query has an error: value is not one of the allowed values"))
 	})
 }
